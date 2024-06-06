@@ -4,24 +4,19 @@ use askama::Template;
 use axum::{
     http::StatusCode,
     response::{Html, IntoResponse},
-    routing::get,
-    Json, Router,
+    Json, 
 };
 use axum_extra::extract::CookieJar;
 use serde::Serialize;
-use tower_http::services::ServeDir;
+use auth_service::Application;
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new()
-        .nest_service("/assets", ServeDir::new("assets"))
-        .route("/", get(root))
-        .route("/protected", get(protected));
+    let app = Application::build("0.0.0.0:3000")
+        .await
+        .expect("Failed to build app");
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
-
-    println!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+    app.run().await.expect("Failed to run app");
 }
 
 #[derive(Template)]
